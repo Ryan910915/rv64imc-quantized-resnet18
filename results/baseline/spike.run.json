@@ -1,0 +1,15 @@
+{
+  "timestamp_utc": "2026-10-16T06:22:21.898750+00:00",
+  "command": [
+    "/home/nasic/tools/spike/bin/spike",
+    "--isa=rv64imc_zicsr",
+    "-m64",
+    "build/baseline/resnet.elf"
+  ],
+  "returncode": 0,
+  "pass_marker": true,
+  "elf_sha256": "100b60e4528a0a445a55039a0ec871e95a3bcbce50a88250a76ec28be299a16b",
+  "spike_binary_sha256": "38ecae16b9244e5234a44c763843afc5427625e161a3068a21047cdde0ef3a88",
+  "host_wall_seconds": 40.15524675697088,
+  "warning": "host_wall_seconds is simulator elapsed time, NOT CV-Wally cycle count or latency"
+}

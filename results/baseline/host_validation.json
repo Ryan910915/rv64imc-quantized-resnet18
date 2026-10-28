@@ -1,0 +1,15 @@
+{
+  "model_sha256": "8fea1acb62829e120b4953b6fbf0f842e0032909254f51c2d989703b66534683",
+  "input_sha256": "a04557fda18a1d3c4072d93659782e942e229055f568aaf8f1cec8aa846a0180",
+  "model_blob_sha256": "e3a9bbf891ecb90385f64d44d54b675d355b891bab5350289c7018206d7e7df4",
+  "output_shape": [
+    1,
+    1000
+  ],
+  "elements": 1000,
+  "mismatches": 0,
+  "max_abs_diff": 0,
+  "host_output_sha256": "fc0d7b479c626f766149938eccb26d65111896bad73d9b337fcf634e09a6827c",
+  "intermediates": "main.c checks every operator before continuing; no reference injection",
+  "test_scope": "one exported graph input; not ImageNet accuracy"
+}
