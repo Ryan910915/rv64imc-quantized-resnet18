@@ -1,0 +1,65 @@
+diff --git a/riscv/encoding.h b/riscv/encoding.h
+index 433bfe7d..482a3a12 100644
+--- a/riscv/encoding.h
++++ b/riscv/encoding.h
+@@ -607,6 +607,10 @@
+ #define MASK_ABSW 0xfff0707f
+ #define MATCH_ADD 0x33
+ #define MASK_ADD 0xfe00707f
++
++#define MATCH_XQMAC8 0x0000000b
++#define MASK_XQMAC8 0xfe00707f
++
+ #define MATCH_ADD_UW 0x800003b
+ #define MASK_ADD_UW 0xfe00707f
+ #define MATCH_ADDD 0x8600601b
+@@ -4503,6 +4507,7 @@ DECLARE_INSN(aaddu, MATCH_AADDU, MASK_AADDU)
+ DECLARE_INSN(abs, MATCH_ABS, MASK_ABS)
+ DECLARE_INSN(absw, MATCH_ABSW, MASK_ABSW)
+ DECLARE_INSN(add, MATCH_ADD, MASK_ADD)
++DECLARE_INSN(xqmac8, MATCH_XQMAC8, MASK_XQMAC8)
+ DECLARE_INSN(add_uw, MATCH_ADD_UW, MASK_ADD_UW)
+ DECLARE_INSN(addd, MATCH_ADDD, MASK_ADDD)
+ DECLARE_INSN(addi, MATCH_ADDI, MASK_ADDI)
+diff --git a/riscv/insns/xqmac8.h b/riscv/insns/xqmac8.h
+new file mode 100644
+index 00000000..8fed6fbe
+--- /dev/null
++++ b/riscv/insns/xqmac8.h
+@@ -0,0 +1,20 @@
++/*
++ * XQMAC8 — packed signed INT8 multiply-accumulate.
++ *
++ * rd is intentionally a read/write accumulator:
++ *
++ *   rd = rd_old + sum_{i=0..7} int8(rs1.byte[i]) * int8(rs2.byte[i])
++ */
++reg_t a = RS1;
++reg_t b = RS2;
++int64_t acc = (int64_t)(sreg_t)RD;
++
++for (int i = 0; i < 8; ++i) {
++  int8_t av = static_cast<int8_t>((a >> (8 * i)) & 0xff);
++  int8_t bv = static_cast<int8_t>((b >> (8 * i)) & 0xff);
++
++  acc += static_cast<int64_t>(av) *
++         static_cast<int64_t>(bv);
++}
++
++WRITE_RD(static_cast<reg_t>(acc));
+diff --git a/riscv/riscv.mk.in b/riscv/riscv.mk.in
+index df29533a..708d561a 100644
+--- a/riscv/riscv.mk.in
++++ b/riscv/riscv.mk.in
+@@ -1810,7 +1810,11 @@ riscv_insn_ext_p = \
+ 	pnclipup_h \
+ 	pnclipup_w \
+ 
++riscv_insn_ext_xqmac = \
++	xqmac8 \
++
+ riscv_insn_list = \
++	$(riscv_insn_ext_xqmac) \
+ 	$(riscv_insn_ext_i) \
+ 	$(riscv_insn_ext_c) \
+ 	$(riscv_insn_ext_f) \

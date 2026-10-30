@@ -1,0 +1,175 @@
+diff --git a/riscv/encoding.h b/riscv/encoding.h
+index 433bfe7d..3b2feba1 100644
+--- a/riscv/encoding.h
++++ b/riscv/encoding.h
+@@ -607,6 +607,12 @@
+ #define MASK_ABSW 0xfff0707f
+ #define MATCH_ADD 0x33
+ #define MASK_ADD 0xfe00707f
++
++#define MATCH_XQMAC8 0x0000000b
++#define MASK_XQMAC8 0xfe00707f
++#define MATCH_XREQUANT 0x0000100b
++#define MASK_XREQUANT  0xfe00707f
++
+ #define MATCH_ADD_UW 0x800003b
+ #define MASK_ADD_UW 0xfe00707f
+ #define MATCH_ADDD 0x8600601b
+@@ -4503,6 +4509,10 @@ DECLARE_INSN(aaddu, MATCH_AADDU, MASK_AADDU)
+ DECLARE_INSN(abs, MATCH_ABS, MASK_ABS)
+ DECLARE_INSN(absw, MATCH_ABSW, MASK_ABSW)
+ DECLARE_INSN(add, MATCH_ADD, MASK_ADD)
++
++DECLARE_INSN(xqmac8, MATCH_XQMAC8, MASK_XQMAC8)
++DECLARE_INSN(xrequant, MATCH_XREQUANT, MASK_XREQUANT)
++
+ DECLARE_INSN(add_uw, MATCH_ADD_UW, MASK_ADD_UW)
+ DECLARE_INSN(addd, MATCH_ADDD, MASK_ADDD)
+ DECLARE_INSN(addi, MATCH_ADDI, MASK_ADDI)
+diff --git a/riscv/insns/xqmac8.h b/riscv/insns/xqmac8.h
+new file mode 100644
+index 00000000..8fed6fbe
+--- /dev/null
++++ b/riscv/insns/xqmac8.h
+@@ -0,0 +1,20 @@
++/*
++ * XQMAC8 — packed signed INT8 multiply-accumulate.
++ *
++ * rd is intentionally a read/write accumulator:
++ *
++ *   rd = rd_old + sum_{i=0..7} int8(rs1.byte[i]) * int8(rs2.byte[i])
++ */
++reg_t a = RS1;
++reg_t b = RS2;
++int64_t acc = (int64_t)(sreg_t)RD;
++
++for (int i = 0; i < 8; ++i) {
++  int8_t av = static_cast<int8_t>((a >> (8 * i)) & 0xff);
++  int8_t bv = static_cast<int8_t>((b >> (8 * i)) & 0xff);
++
++  acc += static_cast<int64_t>(av) *
++         static_cast<int64_t>(bv);
++}
++
++WRITE_RD(static_cast<reg_t>(acc));
+diff --git a/riscv/insns/xrequant.h b/riscv/insns/xrequant.h
+new file mode 100644
+index 00000000..d52ad69b
+--- /dev/null
++++ b/riscv/insns/xrequant.h
+@@ -0,0 +1,97 @@
++/*
++ * XREQUANT
++ *
++ * rs1[31:0] = signed INT32 accumulator
++ *
++ * rs2:
++ *   [31:0]  signed INT32 multiplier
++ *   [39:32] signed INT8 shift
++ *   [47:40] signed INT8 output zero point
++ *   [55:48] signed INT8 activation minimum
++ *   [63:56] signed INT8 activation maximum
++ *
++ * rd = sign-extended saturated INT8 output
++ */
++
++const int32_t x =
++    static_cast<int32_t>(static_cast<uint32_t>(RS1));
++
++const uint64_t param = RS2;
++
++const int32_t multiplier =
++    static_cast<int32_t>(
++        static_cast<uint32_t>(param & UINT64_C(0xffffffff)));
++
++const int32_t shift =
++    static_cast<int32_t>(
++        static_cast<int8_t>((param >> 32) & UINT64_C(0xff)));
++
++const int32_t zero_point =
++    static_cast<int32_t>(
++        static_cast<int8_t>((param >> 40) & UINT64_C(0xff)));
++
++const int32_t act_min =
++    static_cast<int32_t>(
++        static_cast<int8_t>((param >> 48) & UINT64_C(0xff)));
++
++const int32_t act_max =
++    static_cast<int32_t>(
++        static_cast<int8_t>((param >> 56) & UINT64_C(0xff)));
++
++
++/* Same Q31 two-stage rounding semantics as nn_requantize(). */
++const int left  = shift > 0 ? shift : 0;
++const int right = shift < 0 ? -shift : 0;
++
++int64_t expanded =
++    static_cast<int64_t>(x) * (INT64_C(1) << left);
++
++int64_t product =
++    expanded * static_cast<int64_t>(multiplier);
++
++int64_t nudge =
++    product >= 0
++        ? (INT64_C(1) << 30)
++        : 1 - (INT64_C(1) << 30);
++
++int32_t high =
++    static_cast<int32_t>(
++        (product + nudge) / (INT64_C(1) << 31));
++
++
++int32_t scaled = high;
++
++if (right != 0) {
++    int64_t magnitude =
++        high < 0
++            ? -static_cast<int64_t>(high)
++            :  static_cast<int64_t>(high);
++
++    magnitude =
++        (magnitude + (INT64_C(1) << (right - 1))) >> right;
++
++    scaled =
++        static_cast<int32_t>(
++            high < 0 ? -magnitude : magnitude);
++}
++
++
++/* Output zero-point. */
++int64_t result =
++    static_cast<int64_t>(scaled) + zero_point;
++
++
++/* Saturation / activation clamp. */
++if (result < act_min)
++    result = act_min;
++
++if (result > act_max)
++    result = act_max;
++
++
++const int8_t output =
++    static_cast<int8_t>(result);
++
++WRITE_RD(
++    static_cast<reg_t>(
++        static_cast<sreg_t>(output)));
+\ No newline at end of file
+diff --git a/riscv/riscv.mk.in b/riscv/riscv.mk.in
+index df29533a..87886dd2 100644
+--- a/riscv/riscv.mk.in
++++ b/riscv/riscv.mk.in
+@@ -1810,7 +1810,12 @@ riscv_insn_ext_p = \
+ 	pnclipup_h \
+ 	pnclipup_w \
+ 
++riscv_insn_ext_xqmac = \
++	xqmac8 \
++    xrequant \
++
+ riscv_insn_list = \
++	$(riscv_insn_ext_xqmac) \
+ 	$(riscv_insn_ext_i) \
+ 	$(riscv_insn_ext_c) \
+ 	$(riscv_insn_ext_f) \

@@ -1,0 +1,20 @@
+build/baseline/resnet.elf  :
+section                 size         addr
+.text                   5468   2147483648
+.rodata             16898664   2147489120
+.tohost                   72   2164387840
+.data                      4   2164387920
+.bss                 4998416   2164387936
+.stack                262144   2169386352
+.riscv.attributes         38            0
+.debug_info            11961            0
+.debug_abbrev           2145            0
+.debug_loc             15092            0
+.debug_aranges           176            0
+.debug_ranges           7824            0
+.debug_line            12423            0
+.debug_str              1620            0
+.debug_frame             704            0
+Total               22216751
+
+
