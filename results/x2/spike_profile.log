@@ -1,0 +1,114 @@
+FULL MODEL start ops=37 model_sha256=8fea1acb62829e120b4953b6fbf0f842e0032909254f51c2d989703b66534683
+BEGIN op=0 kind=TRANSPOSE
+CHECK op=0 elements=150528 mismatches=0 max_abs_diff=0
+PROFILE op=0 kind=TRANSPOSE instret=12343419 dense_macs=0 valid_macs=0
+BEGIN op=1 kind=PAD
+CHECK op=1 elements=158700 mismatches=0 max_abs_diff=0
+PROFILE op=1 kind=PAD instret=14693434 dense_macs=0 valid_macs=0
+BEGIN op=2 kind=CONV_2D
+CHECK op=2 elements=802816 mismatches=0 max_abs_diff=0
+PROFILE op=2 kind=CONV_2D instret=2592445523 dense_macs=118013952 valid_macs=118013952
+BEGIN op=3 kind=PAD
+CHECK op=3 elements=831744 mismatches=0 max_abs_diff=0
+PROFILE op=3 kind=PAD instret=77119886 dense_macs=0 valid_macs=0
+BEGIN op=4 kind=MAX_POOL_2D
+CHECK op=4 elements=200704 mismatches=0 max_abs_diff=0
+PROFILE op=4 kind=MAX_POOL_2D instret=54068549 dense_macs=0 valid_macs=0
+BEGIN op=5 kind=CONV_2D
+CHECK op=5 elements=200704 mismatches=0 max_abs_diff=0
+PROFILE op=5 kind=CONV_2D instret=201132368 dense_macs=115605504 valid_macs=112869376
+BEGIN op=6 kind=CONV_2D
+CHECK op=6 elements=200704 mismatches=0 max_abs_diff=0
+PROFILE op=6 kind=CONV_2D instret=201132368 dense_macs=115605504 valid_macs=112869376
+BEGIN op=7 kind=ADD
+CHECK op=7 elements=200704 mismatches=0 max_abs_diff=0
+PROFILE op=7 kind=ADD instret=13116871 dense_macs=0 valid_macs=0
+BEGIN op=8 kind=CONV_2D
+CHECK op=8 elements=200704 mismatches=0 max_abs_diff=0
+PROFILE op=8 kind=CONV_2D instret=201132368 dense_macs=115605504 valid_macs=112869376
+BEGIN op=9 kind=CONV_2D
+CHECK op=9 elements=200704 mismatches=0 max_abs_diff=0
+PROFILE op=9 kind=CONV_2D instret=201132368 dense_macs=115605504 valid_macs=112869376
+BEGIN op=10 kind=ADD
+CHECK op=10 elements=200704 mismatches=0 max_abs_diff=0
+PROFILE op=10 kind=ADD instret=13006556 dense_macs=0 valid_macs=0
+BEGIN op=11 kind=PAD
+CHECK op=11 elements=215296 mismatches=0 max_abs_diff=0
+PROFILE op=11 kind=PAD instret=19904910 dense_macs=0 valid_macs=0
+BEGIN op=12 kind=CONV_2D
+CHECK op=12 elements=100352 mismatches=0 max_abs_diff=0
+PROFILE op=12 kind=CONV_2D instret=102777052 dense_macs=57802752 valid_macs=57802752
+BEGIN op=13 kind=CONV_2D
+CHECK op=13 elements=100352 mismatches=0 max_abs_diff=0
+PROFILE op=13 kind=CONV_2D instret=147311836 dense_macs=115605504 valid_macs=110166016
+BEGIN op=14 kind=CONV_2D
+CHECK op=14 elements=100352 mismatches=0 max_abs_diff=0
+PROFILE op=14 kind=CONV_2D instret=16203740 dense_macs=6422528 valid_macs=6422528
+BEGIN op=15 kind=ADD
+CHECK op=15 elements=100352 mismatches=0 max_abs_diff=0
+PROFILE op=15 kind=ADD instret=6807024 dense_macs=0 valid_macs=0
+BEGIN op=16 kind=CONV_2D
+CHECK op=16 elements=100352 mismatches=0 max_abs_diff=0
+PROFILE op=16 kind=CONV_2D instret=147311836 dense_macs=115605504 valid_macs=110166016
+BEGIN op=17 kind=CONV_2D
+CHECK op=17 elements=100352 mismatches=0 max_abs_diff=0
+PROFILE op=17 kind=CONV_2D instret=147311836 dense_macs=115605504 valid_macs=110166016
+BEGIN op=18 kind=ADD
+CHECK op=18 elements=100352 mismatches=0 max_abs_diff=0
+PROFILE op=18 kind=ADD instret=6581517 dense_macs=0 valid_macs=0
+BEGIN op=19 kind=PAD
+CHECK op=19 elements=115200 mismatches=0 max_abs_diff=0
+PROFILE op=19 kind=PAD instret=10592910 dense_macs=0 valid_macs=0
+BEGIN op=20 kind=CONV_2D
+CHECK op=20 elements=50176 mismatches=0 max_abs_diff=0
+PROFILE op=20 kind=CONV_2D instret=77726386 dense_macs=57802752 valid_macs=57802752
+BEGIN op=21 kind=CONV_2D
+CHECK op=21 elements=50176 mismatches=0 max_abs_diff=0
+PROFILE op=21 kind=CONV_2D instret=118514354 dense_macs=115605504 valid_macs=104857600
+BEGIN op=22 kind=CONV_2D
+CHECK op=22 elements=50176 mismatches=0 max_abs_diff=0
+PROFILE op=22 kind=CONV_2D instret=11030706 dense_macs=6422528 valid_macs=6422528
+BEGIN op=23 kind=ADD
+CHECK op=23 elements=50176 mismatches=0 max_abs_diff=0
+PROFILE op=23 kind=ADD instret=3419296 dense_macs=0 valid_macs=0
+BEGIN op=24 kind=CONV_2D
+CHECK op=24 elements=50176 mismatches=0 max_abs_diff=0
+PROFILE op=24 kind=CONV_2D instret=118514354 dense_macs=115605504 valid_macs=104857600
+BEGIN op=25 kind=CONV_2D
+CHECK op=25 elements=50176 mismatches=0 max_abs_diff=0
+PROFILE op=25 kind=CONV_2D instret=118514354 dense_macs=115605504 valid_macs=104857600
+BEGIN op=26 kind=ADD
+CHECK op=26 elements=50176 mismatches=0 max_abs_diff=0
+PROFILE op=26 kind=ADD instret=3262800 dense_macs=0 valid_macs=0
+BEGIN op=27 kind=PAD
+CHECK op=27 elements=65536 mismatches=0 max_abs_diff=0
+PROFILE op=27 kind=PAD instret=5968014 dense_macs=0 valid_macs=0
+BEGIN op=28 kind=CONV_2D
+CHECK op=28 elements=25088 mismatches=0 max_abs_diff=0
+PROFILE op=28 kind=CONV_2D instret=68318593 dense_macs=57802752 valid_macs=57802752
+BEGIN op=29 kind=CONV_2D
+CHECK op=29 elements=25088 mismatches=0 max_abs_diff=0
+PROFILE op=29 kind=CONV_2D instret=103726465 dense_macs=115605504 valid_macs=94633984
+BEGIN op=30 kind=CONV_2D
+CHECK op=30 elements=25088 mismatches=0 max_abs_diff=0
+PROFILE op=30 kind=CONV_2D instret=8796545 dense_macs=6422528 valid_macs=6422528
+BEGIN op=31 kind=ADD
+CHECK op=31 elements=25088 mismatches=0 max_abs_diff=0
+PROFILE op=31 kind=ADD instret=1760814 dense_macs=0 valid_macs=0
+BEGIN op=32 kind=CONV_2D
+CHECK op=32 elements=25088 mismatches=0 max_abs_diff=0
+PROFILE op=32 kind=CONV_2D instret=103726465 dense_macs=115605504 valid_macs=94633984
+BEGIN op=33 kind=CONV_2D
+CHECK op=33 elements=25088 mismatches=0 max_abs_diff=0
+PROFILE op=33 kind=CONV_2D instret=103726465 dense_macs=115605504 valid_macs=94633984
+BEGIN op=34 kind=ADD
+CHECK op=34 elements=25088 mismatches=0 max_abs_diff=0
+PROFILE op=34 kind=ADD instret=1622574 dense_macs=0 valid_macs=0
+BEGIN op=35 kind=AVERAGE_POOL_2D
+CHECK op=35 elements=512 mismatches=0 max_abs_diff=0
+PROFILE op=35 kind=AVERAGE_POOL_2D instret=602620 dense_macs=0 valid_macs=0
+BEGIN op=36 kind=FULLY_CONNECTED
+CHECK op=36 elements=1000 mismatches=0 max_abs_diff=0
+PROFILE op=36 kind=FULLY_CONNECTED instret=4223279 dense_macs=512000 valid_macs=512000
+PASS full_model operators=37 outputs=1000 mismatches=0 checksum=10998521980379814894
+PROFILE_SUM dispatch_regions_instret=5039580455
