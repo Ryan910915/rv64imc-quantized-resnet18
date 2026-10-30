@@ -1,0 +1,19 @@
+# Build products
+build/
+*/build/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Compiled RISC-V artifacts
+*.elf
+*.map
+*.dis
+
+# Temporary profiling workspace
+baseline/results/
+optimized/results/
+
+# Local archives
+*.zip

@@ -1,0 +1,37 @@
+00 TRANSPOSE            in=[85, 31] out=84 shape=[1, 224, 224, 3] dense_MACs=0 valid_MACs=0
+01 PAD                  in=[84, 36] out=35 shape=[1, 230, 230, 3] dense_MACs=0 valid_MACs=0
+02 CONV_2D              in=[35, 43, 18] out=65 shape=[1, 112, 112, 64] dense_MACs=118013952 valid_MACs=118013952
+03 PAD                  in=[65, 37] out=42 shape=[1, 114, 114, 64] dense_MACs=0 valid_MACs=0
+04 MAX_POOL_2D          in=[42] out=83 shape=[1, 56, 56, 64] dense_MACs=0 valid_MACs=0
+05 CONV_2D              in=[83, 46, 14] out=66 shape=[1, 56, 56, 64] dense_MACs=115605504 valid_MACs=112869376
+06 CONV_2D              in=[66, 47, 17] out=6 shape=[1, 56, 56, 64] dense_MACs=115605504 valid_MACs=112869376
+07 ADD                  in=[6, 83] out=74 shape=[1, 56, 56, 64] dense_MACs=0 valid_MACs=0
+08 CONV_2D              in=[74, 48, 19] out=75 shape=[1, 56, 56, 64] dense_MACs=115605504 valid_MACs=112869376
+09 CONV_2D              in=[75, 49, 20] out=7 shape=[1, 56, 56, 64] dense_MACs=115605504 valid_MACs=112869376
+10 ADD                  in=[7, 74] out=76 shape=[1, 56, 56, 64] dense_MACs=0 valid_MACs=0
+11 PAD                  in=[76, 38] out=34 shape=[1, 58, 58, 64] dense_MACs=0 valid_MACs=0
+12 CONV_2D              in=[34, 50, 21] out=77 shape=[1, 28, 28, 128] dense_MACs=57802752 valid_MACs=57802752
+13 CONV_2D              in=[77, 51, 22] out=8 shape=[1, 28, 28, 128] dense_MACs=115605504 valid_MACs=110166016
+14 CONV_2D              in=[76, 52, 23] out=9 shape=[1, 28, 28, 128] dense_MACs=6422528 valid_MACs=6422528
+15 ADD                  in=[8, 9] out=78 shape=[1, 28, 28, 128] dense_MACs=0 valid_MACs=0
+16 CONV_2D              in=[78, 53, 24] out=79 shape=[1, 28, 28, 128] dense_MACs=115605504 valid_MACs=110166016
+17 CONV_2D              in=[79, 54, 25] out=10 shape=[1, 28, 28, 128] dense_MACs=115605504 valid_MACs=110166016
+18 ADD                  in=[10, 78] out=80 shape=[1, 28, 28, 128] dense_MACs=0 valid_MACs=0
+19 PAD                  in=[80, 39] out=32 shape=[1, 30, 30, 128] dense_MACs=0 valid_MACs=0
+20 CONV_2D              in=[32, 55, 26] out=81 shape=[1, 14, 14, 256] dense_MACs=57802752 valid_MACs=57802752
+21 CONV_2D              in=[81, 56, 27] out=0 shape=[1, 14, 14, 256] dense_MACs=115605504 valid_MACs=104857600
+22 CONV_2D              in=[80, 57, 28] out=1 shape=[1, 14, 14, 256] dense_MACs=6422528 valid_MACs=6422528
+23 ADD                  in=[0, 1] out=67 shape=[1, 14, 14, 256] dense_MACs=0 valid_MACs=0
+24 CONV_2D              in=[67, 58, 29] out=68 shape=[1, 14, 14, 256] dense_MACs=115605504 valid_MACs=104857600
+25 CONV_2D              in=[68, 59, 30] out=2 shape=[1, 14, 14, 256] dense_MACs=115605504 valid_MACs=104857600
+26 ADD                  in=[2, 67] out=69 shape=[1, 14, 14, 256] dense_MACs=0 valid_MACs=0
+27 PAD                  in=[69, 40] out=33 shape=[1, 16, 16, 256] dense_MACs=0 valid_MACs=0
+28 CONV_2D              in=[33, 60, 11] out=70 shape=[1, 7, 7, 512] dense_MACs=57802752 valid_MACs=57802752
+29 CONV_2D              in=[70, 61, 12] out=3 shape=[1, 7, 7, 512] dense_MACs=115605504 valid_MACs=94633984
+30 CONV_2D              in=[69, 62, 13] out=4 shape=[1, 7, 7, 512] dense_MACs=6422528 valid_MACs=6422528
+31 ADD                  in=[3, 4] out=71 shape=[1, 7, 7, 512] dense_MACs=0 valid_MACs=0
+32 CONV_2D              in=[71, 63, 15] out=72 shape=[1, 7, 7, 512] dense_MACs=115605504 valid_MACs=94633984
+33 CONV_2D              in=[72, 64, 16] out=5 shape=[1, 7, 7, 512] dense_MACs=115605504 valid_MACs=94633984
+34 ADD                  in=[5, 71] out=73 shape=[1, 7, 7, 512] dense_MACs=0 valid_MACs=0
+35 AVERAGE_POOL_2D      in=[73] out=82 shape=[1, 1, 1, 512] dense_MACs=0 valid_MACs=0
+36 FULLY_CONNECTED      in=[82, 45, 44] out=41 shape=[1, 1000] dense_MACs=512000 valid_MACs=512000

@@ -1,6 +1,4 @@
 #include "nn.h"
-#include "xqmac8.h"
-#include "xrequant.h"
 #include <limits.h>
 
 const int8_t *nn_tensor_input(int32_t id) {
@@ -91,42 +89,6 @@ int32_t nn_requantize_fc_reference(int32_t x,uint64_t significand,int32_t expone
     if(magnitude>=limit) return negative?INT32_MIN:INT32_MAX;
     return negative?-(int32_t)magnitude:(int32_t)magnitude;
 }
-/*
- * XQMAC8 integration for the selected ResNet-18.
- *
- * XQMAC8 is a packed signed INT8 multiply-accumulate instruction:
- *   acc = acc + sum_{i=0..7} int8(a_i) * int8(w_i)
- *
- * The destination register is a read/write accumulator operand.
- *
- * The quantized Conv reference expression is:
- *   sum_i (a_i - input_zero_point) * w_i
- *
- * Because the weights are symmetric (weight zero-point = 0), for each valid
- * spatial kernel position we can rewrite this exactly as:
- *
- *   sum_i a_i*w_i - input_zero_point * sum_i w_i
- *
- * Weight sums depend only on (output-channel, ky, kx), so they are computed
- * once per Conv invocation and reused for all output pixels. This is
- * especially important for SAME-padding border pixels: only weight sums for
- * spatial kernel positions that are actually in bounds are applied.
- *
- * The largest filter-position table in this ResNet-18 is
- *   512 output channels * 3 * 3 = 4608 entries.
- * Keep the storage static so the bare-metal workload still uses no heap.
- */
-#define NN_XQMAC8_MAX_WEIGHT_SUMS 4608
-static int32_t nn_xqmac8_weight_sums[NN_XQMAC8_MAX_WEIGHT_SUMS];
-
-/*
- * XREQUANT parameters are constant for each Conv output channel.
- * Pack them once per Conv invocation, then reuse the 64-bit parameter word
- * for every output element of that channel.
- */
-#define NN_XREQUANT_MAX_CHANNELS 512
-static uint64_t nn_xrequant_params[NN_XREQUANT_MAX_CHANNELS];
-
 static int conv(const Op *p) {
     const Tensor *x=&nn_tensors[p->in[0]], *w=&nn_tensors[p->in[1]], *y=&nn_tensors[p->out];
     const int8_t *a=nn_tensor_input(p->in[0]), *b=nn_tensor_input(p->in[1]);
@@ -136,131 +98,28 @@ static int conv(const Op *p) {
     int8_t *out=nn_tensor_output(p->out);
     int ih=x->dims[1], iw=x->dims[2], ci=x->dims[3], co=y->dims[3];
     int kh=w->dims[1], kw=w->dims[2];
-
-    /*
-     * The first ResNet Conv has ci=3, so it stays on the original scalar path.
-     * The dominant later convolutions have ci=64/128/256/512 and use XQMAC8.
-     */
-    const int use_xqmac8=(ci>=8);
-
-    /*
-     * Pre-pack the complete output requantization state used by XREQUANT:
-     * multiplier, shift, output zero-point, activation min and activation max.
-     * ResNet-18 has at most 512 Conv output channels.
-     */
-    if(co>NN_XREQUANT_MAX_CHANNELS) return 11;
-    for(int oc=0;oc<co;++oc) {
-        nn_xrequant_params[oc]=xrequant_pack_params(
-            q[oc],
-            sh[oc],
-            y->zero_point,
-            p->act_min,
-            p->act_max);
-    }
-
-    /*
-     * Precompute sum(weights) for each (oc,ky,kx) only when the asymmetric
-     * activation zero point actually needs a correction.
-     */
-    if(use_xqmac8 && x->zero_point!=0) {
-        size_t weight_sum_count=(size_t)co*(size_t)kh*(size_t)kw;
-        if(weight_sum_count>NN_XQMAC8_MAX_WEIGHT_SUMS) return 10;
-
-        for(int oc=0;oc<co;++oc) {
-            for(int ky=0;ky<kh;++ky) {
-                for(int kx=0;kx<kw;++kx) {
-                    size_t wi=(((size_t)oc*(size_t)kh+(size_t)ky)*
-                               (size_t)kw+(size_t)kx)*(size_t)ci;
-                    int32_t sum=0;
-
-                    for(int ic=0;ic<ci;++ic)
-                        sum+=(int32_t)b[wi+(size_t)ic];
-
-                    nn_xqmac8_weight_sums[
-                        ((size_t)oc*(size_t)kh+(size_t)ky)*(size_t)kw+
-                        (size_t)kx
-                    ]=sum;
-                }
-            }
-        }
-    }
-
     for(int n=0;n<y->dims[0];++n) for(int oy=0;oy<y->dims[1];++oy)
     for(int ox=0;ox<y->dims[2];++ox) for(int oc=0;oc<co;++oc) {
         int32_t acc=bias?bias[oc]:0;
-
         for(int ky=0;ky<kh;++ky) {
             int iy=oy*p->stride[0]-p->pad[0]+ky*p->dilation[0];
             if(iy<0||iy>=ih) continue;
-
             for(int kx=0;kx<kw;++kx) {
                 int ix=ox*p->stride[1]-p->pad[2]+kx*p->dilation[1];
                 if(ix<0||ix>=iw) continue;
-
                 size_t ai=nhwc(x,n,iy,ix,0);
-                size_t wi=(((size_t)oc*(size_t)kh+(size_t)ky)*
-                           (size_t)kw+(size_t)kx)*(size_t)ci;
-
-                if(use_xqmac8) {
-                    int ic=0;
-
-                    /*
-                     * Activations and OHWI weights are contiguous in the
-                     * channel dimension.  The selected model's arena/model
-                     * blob bases are 16-byte aligned, relevant tensor offsets
-                     * are 8-byte aligned, and ic advances by 8, so target-side
-                     * xqmac8_load8() can use one RV64 LD per packed operand.
-                     */
-                    for(;ic+7<ci;ic+=8) {
-                        uint64_t av=xqmac8_load8(&a[ai+(size_t)ic]);
-                        uint64_t bv=xqmac8_load8(&b[wi+(size_t)ic]);
-                        acc=xqmac8(acc,av,bv);
-                    }
-
-                    /* Generic scalar tail for channel counts not divisible by 8. */
-                    for(;ic<ci;++ic)
-                        acc+=(int32_t)a[ai+(size_t)ic]*
-                             (int32_t)b[wi+(size_t)ic];
-
-                    /*
-                     * Apply the activation zero-point correction once for this
-                     * valid (ky,kx) position. Out-of-bounds positions are
-                     * skipped above, matching the original Conv behavior.
-                     */
-                    if(x->zero_point!=0) {
-                        size_t si=((size_t)oc*(size_t)kh+(size_t)ky)*
-                                  (size_t)kw+(size_t)kx;
-                        acc-=x->zero_point*nn_xqmac8_weight_sums[si];
-                    }
-                } else {
-                    /*
-                     * Original scalar path, retained for small channel counts
-                     * such as the first RGB Conv (ci=3).
-                     */
-                    for(int ic=0;ic<ci;++ic) {
-                        int32_t xv=(int32_t)a[ai+(size_t)ic]-x->zero_point;
-                        acc+=xv*(int32_t)b[wi+(size_t)ic];
-                    }
+                size_t wi=(((size_t)oc*(size_t)kh+(size_t)ky)*(size_t)kw+(size_t)kx)*(size_t)ci;
+                for(int ic=0;ic<ci;++ic) {
+                    /* Widen before subtracting asymmetric activation zero point. */
+                    int32_t xv=(int32_t)a[ai+(size_t)ic]-x->zero_point;
+                    acc+=xv*(int32_t)b[wi+(size_t)ic];
                 }
             }
         }
-
-        /*
-         * XREQUANT performs the whole output post-processing path in one
-         * custom instruction on RV64:
-         *   fixed-point multiply -> rounding -> shift
-         *   -> output zero-point -> saturation.
-         *
-         * The host path in xrequant.h executes the identical software
-         * semantics for make host-test.
-         */
-        out[nhwc(y,n,oy,ox,oc)]=
-            xrequant_apply(acc,nn_xrequant_params[oc]);
+        out[nhwc(y,n,oy,ox,oc)]=clamp((int64_t)nn_requantize(acc,q[oc],sh[oc])+y->zero_point,p);
     }
-
     return 0;
 }
-
 static int fc(const Op *p) {
     const Tensor *x=&nn_tensors[p->in[0]], *w=&nn_tensors[p->in[1]], *y=&nn_tensors[p->out];
     const int8_t *a=nn_tensor_input(p->in[0]), *b=nn_tensor_input(p->in[1]);
@@ -288,25 +147,12 @@ static int add(const Op *p) {
     const Tensor *x=&nn_tensors[p->in[0]], *z=&nn_tensors[p->in[1]], *y=&nn_tensors[p->out];
     const int8_t *a=nn_tensor_input(p->in[0]), *b=nn_tensor_input(p->in[1]);
     int8_t *out=nn_tensor_output(p->out);
-
-    /*
-     * Only the final ADD output requantization can be fused into XREQUANT.
-     * The two input-side requantizations below must remain wide INT32 values
-     * because they are added together before the final output saturation.
-     */
-    const uint64_t out_params=xrequant_pack_params(
-        p->add[4],
-        p->add[5],
-        y->zero_point,
-        p->act_min,
-        p->act_max);
-
     /* Exporter rejects broadcast ADD; this graph uses same-shape residuals. */
     for(uint32_t i=0;i<y->count;++i) {
         int32_t av=((int32_t)a[i]-x->zero_point)*(INT32_C(1)<<p->add[6]);
         int32_t bv=((int32_t)b[i]-z->zero_point)*(INT32_C(1)<<p->add[6]);
         int32_t sum=nn_requantize(av,p->add[0],p->add[1])+nn_requantize(bv,p->add[2],p->add[3]);
-        out[i]=xrequant_apply(sum,out_params);
+        out[i]=clamp((int64_t)nn_requantize(sum,p->add[4],p->add[5])+y->zero_point,p);
     }
     return 0;
 }

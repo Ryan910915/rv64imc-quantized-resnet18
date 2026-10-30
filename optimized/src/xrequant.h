@@ -29,16 +29,25 @@ static inline int8_t xrequant_apply(
 {
 #ifdef __riscv
 
-    int64_t result;
+    /*
+     * Reuse the accumulator register as rd.
+     *
+     * Encoding:
+     *   rd == rs1
+     *
+     * This reduces the live-register requirement of XREQUANT
+     * from three registers (rd, rs1, rs2) to two
+     * (accumulator/result, params).
+     */
+    int64_t value=(int64_t)accumulator;
 
     __asm__ volatile (
-        ".insn r 0x0b, 1, 0, %0, %1, %2"
-        : "=r"(result)
-        : "r"((int64_t)accumulator),
-          "r"(params)
+        ".insn r 0x0b, 1, 0, %0, %0, %1"
+        : "+r"(value)
+        : "r"(params)
     );
 
-    return (int8_t)result;
+    return (int8_t)value;
 
 #else
 
