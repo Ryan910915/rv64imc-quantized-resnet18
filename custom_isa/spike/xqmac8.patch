@@ -23,24 +23,30 @@ index 433bfe7d..482a3a12 100644
  DECLARE_INSN(addi, MATCH_ADDI, MASK_ADDI)
 diff --git a/riscv/insns/xqmac8.h b/riscv/insns/xqmac8.h
 new file mode 100644
-index 00000000..5e2e80ad
+index 00000000..8fed6fbe
 --- /dev/null
 +++ b/riscv/insns/xqmac8.h
-@@ -0,0 +1,14 @@
+@@ -0,0 +1,20 @@
++/*
++ * XQMAC8 — packed signed INT8 multiply-accumulate.
++ *
++ * rd is intentionally a read/write accumulator:
++ *
++ *   rd = rd_old + sum_{i=0..7} int8(rs1.byte[i]) * int8(rs2.byte[i])
++ */
 +reg_t a = RS1;
 +reg_t b = RS2;
-+
-+int64_t sum = 0;
++int64_t acc = (int64_t)(sreg_t)RD;
 +
 +for (int i = 0; i < 8; ++i) {
 +  int8_t av = static_cast<int8_t>((a >> (8 * i)) & 0xff);
 +  int8_t bv = static_cast<int8_t>((b >> (8 * i)) & 0xff);
 +
-+  sum += static_cast<int64_t>(av) *
++  acc += static_cast<int64_t>(av) *
 +         static_cast<int64_t>(bv);
 +}
 +
-+WRITE_RD(static_cast<reg_t>(sum));
++WRITE_RD(static_cast<reg_t>(acc));
 diff --git a/riscv/riscv.mk.in b/riscv/riscv.mk.in
 index df29533a..708d561a 100644
 --- a/riscv/riscv.mk.in

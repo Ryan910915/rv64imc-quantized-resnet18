@@ -1,0 +1,20 @@
+{
+  "model_sha256": "8fea1acb62829e120b4953b6fbf0f842e0032909254f51c2d989703b66534683",
+  "dispatch_regions_instret": 4648177001,
+  "by_kind_instret": {
+    "TRANSPOSE": 12343419,
+    "PAD": 126976734,
+    "CONV_2D": 4372403643,
+    "MAX_POOL_2D": 54068549,
+    "ADD": 77555773,
+    "AVERAGE_POOL_2D": 602620,
+    "FULLY_CONNECTED": 4226263
+  },
+  "note": "Each region includes nn_execute and called helpers plus small counter-call boundary overhead. Startup, console, golden checks and checksum are outside regions. This is NOT entire-executable retired count, NOT instruction mix, NOT CV-Wally cycles.",
+  "remaining_metrics": [
+    "instruction mix",
+    "dynamic loads/stores",
+    "full executable instruction total if reported",
+    "custom-instruction use after implementation"
+  ]
+}

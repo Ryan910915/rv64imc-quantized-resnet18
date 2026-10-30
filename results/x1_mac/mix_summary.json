@@ -1,0 +1,50 @@
+{
+  "status": "PASS",
+  "measurement_scope": "[opening platform_instret CSR, closing CSR), per operator; closing read excluded",
+  "model_sha256": "8fea1acb62829e120b4953b6fbf0f842e0032909254f51c2d989703b66534683",
+  "elf_sha256": "5aa7f5bcd479bacc997ef5cf2a50c2ea1c2815b1dac73e9ad6bb0906f98a8bb1",
+  "manifest_sha256": "b2a9a68480feb05df173cb5109fedb9b30dc684ae489958b256939d728fdb0df",
+  "old_csv_sha256": "3a98c3333eede165cbeec343321d7570def3d2c1ec8f26d1d5ec65009cbcedcc",
+  "old_b0_check": "all per-operator instret and MAC counts matched saved B0",
+  "operators": 37,
+  "final_checksum": "10998521980379814894",
+  "dispatch_regions_instret": 4648177001,
+  "instruction_mix": {
+    "csr": 37,
+    "jump_call_return": 19764416,
+    "integer_alu": 2009637061,
+    "load": 1255955681,
+    "branch": 704667848,
+    "store": 10451623,
+    "multiply": 438763022,
+    "divide_remainder": 12296545,
+    "custom": 196640768
+  },
+  "loads": 1255955681,
+  "stores": 10451623,
+  "memory_instructions": 1266407304,
+  "dense_macs": 1814073344,
+  "valid_macs": 1691652096,
+  "dense_macs_per_instret": 0.3902763047985745,
+  "valid_macs_per_instret": 0.3639388292735111,
+  "load_store_per_dense_mac": 0.6981014897708568,
+  "load_store_per_valid_mac": 0.7486216031029586,
+  "custom_opcode_count": 196640768,
+  "custom_opcode_fraction": 0.04230492254440721,
+  "custom_note": "B0 custom opcode count is normally zero. This is not a validation of custom ISA semantics or lane utilization.",
+  "checks": [
+    "full model PASS",
+    "all gate pairs closed",
+    "every observed encoding matches ELF",
+    "every per-op category sum equals target minstret delta",
+    "no unknown encoding",
+    "saved B0 checked when supplied"
+  ],
+  "cautions": [
+    "Instruction share is not time share; no CV-Wally cycle claim.",
+    "Load/store bytes are architectural access widths, including stack/metadata, not DRAM traffic or cache misses.",
+    "Multiply includes address arithmetic as well as MAC arithmetic.",
+    "Function attribution uses actual symbols; inlined requantization cannot be separated semantically.",
+    "No whole-ELF startup/validation total is claimed."
+  ]
+}
